@@ -13,6 +13,12 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { UserButton, useUser } from "@clerk/clerk-react";
+import useMutationHandler from "@/hooks/useMutationHandler";
+import { toast } from "sonner";
+import { ConvexError } from "convex/values";
 
 const status  = [
   '💆 Taking a break',
@@ -26,7 +32,13 @@ type Props = {}
 
 const ProfileDialogContent = (props: Props) => {
   const [openStatus, setOpenStatus] = useState(false);
-  const [userStatus, setUserStatus] = useState(status[0]);
+  const [userStatus, setUserStatus] = useState("");
+
+  const { user } = useUser();
+  const userDetails = useQuery(api.status.get, {
+    clerkId: user?.id!
+  })
+  const {mutate: updatestatus, state: updatestatusState} = useMutationHandler(api.status.update)
 
   const {theme, setTheme} = useTheme();
 
@@ -42,19 +54,41 @@ const ProfileDialogContent = (props: Props) => {
   })
 
   const onSubmit = async ({email}: z.infer<typeof addFriendFormSchema>) => {
-    console.log(email)
+    
+  }
+
+  const updateStatusHandler = async () => {
+    try {
+      await updatestatus({
+        status: userStatus,
+        clerkId: user?.id!
+      })
+      toast.success('Status updated successfully');
+      setUserStatus("")
+      setOpenStatus(false)
+    } catch (error) {
+      console.error('Error updating status', error)
+      toast.error(
+        error instanceof ConvexError ? error.data : 'An error occurred'
+      );
+    }
   }
 
   return (
     <div>
       <Card className="border-0 flex flex-col space-y-4 bg-transparent">
         <CardTitle className="dark:text-white text-gray-950">Profile</CardTitle>
-
-        <div>
-          <Avatar className="h-20 w-20 mx-auto">
-            <AvatarImage src="https://github.com/shadcn.png" />
-            <AvatarFallback>User</AvatarFallback>
-          </Avatar>
+        <div className="w-fit mx-auto">
+          <UserButton 
+            appearance={{
+              elements:{
+                userButtonPopoverCard:{
+                  pointerEvents: 'initial',
+                },
+                userButtonAvatarBox: "h-20 w-20",
+              },
+            }}
+          />
         </div>
       </Card>
 
@@ -64,18 +98,9 @@ const ProfileDialogContent = (props: Props) => {
           <Input
             disabled
             placeholder="Name"
-            value={'User Name'}
+            value={userDetails?.username}
             className="border-none outline-none ring-0"
           />
-        </div>
-
-        <Separator/>
-
-        <div className="flex items-center justify-center space-x-5">
-          <p>Manage Your Account</p>
-          <Button>
-            User Button
-          </Button>
         </div>
 
         <Separator/>
@@ -145,16 +170,17 @@ const ProfileDialogContent = (props: Props) => {
           <DialogTrigger>
             <div className="flex items-center space-x-2">
               <Pencil/>
-              <p>display current status</p>
+              <p>{userDetails?.status}</p>
             </div>
           </DialogTrigger>
 
           <DialogContent>
             <Textarea 
-              placeholder="Display current status"
+              placeholder={userDetails?.status}
               className="resize-none h-48"
               value={userStatus}
               onChange={(e)=> setUserStatus(e.target.value)}
+              disabled={updatestatusState === 'loading'}
             />
 
             <div className="flex flex-wrap gap-1">
@@ -172,10 +198,8 @@ const ProfileDialogContent = (props: Props) => {
             </div>
 
             <Button
-              onClick={()=> {
-                setOpenStatus(false)
-              }}
-              disabled
+              onClick={updateStatusHandler}
+              disabled={updatestatusState === 'loading'}
               type="button"
               className="ml-auto w-fit bg-primary-main"
             >

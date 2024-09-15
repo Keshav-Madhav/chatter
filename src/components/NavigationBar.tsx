@@ -3,13 +3,13 @@
 import { MessageCircle, Phone, Target } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
-import { NavigationMenu, NavigationMenuItem, NavigationMenuList } from "@/components/ui/navigation-menu";
+import { NavigationMenu, NavigationMenuItem, NavigationMenuList } from "@/components/navigation-menu";
 import { cn, isRouteActive } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import Link from "next/link";
 import { Dialog, DialogContent, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import ProfileDialogContent from "@/components/ui/ProfileDialogContent";
+import ProfileDialogContent from "@/components/ProfileDialogContent";
 
 type Props = {
   trigger: React.ReactNode;
