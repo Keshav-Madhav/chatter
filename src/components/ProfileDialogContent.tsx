@@ -19,6 +19,9 @@ import { UserButton, useUser } from "@clerk/clerk-react";
 import useMutationHandler from "@/hooks/useMutationHandler";
 import { toast } from "sonner";
 import { ConvexError } from "convex/values";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import FriendRequestCard from "./FriendRequestCard";
 
 const status  = [
   '💆 Taking a break',
@@ -32,15 +35,18 @@ type Props = {}
 
 const ProfileDialogContent = (props: Props) => {
   const [openStatus, setOpenStatus] = useState(false);
+  const [openFriendRequest, setOpenFriendRequest] = useState(false);
   const [userStatus, setUserStatus] = useState("");
-
+  
+  const {theme, setTheme} = useTheme();
   const { user } = useUser();
   const userDetails = useQuery(api.status.get, {
     clerkId: user?.id!
   })
-  const {mutate: updatestatus, state: updatestatusState} = useMutationHandler(api.status.update)
 
-  const {theme, setTheme} = useTheme();
+  const {mutate: updatestatus, state: updatestatusState} = useMutationHandler(api.status.update)
+  const {mutate: sendFriendRequest, state: updateRequestSendStatus} = useMutationHandler(api.friend_request.create)
+  const friendRequests = useQuery(api.friend_requests.get)
 
   const addFriendFormSchema = z.object({
     email: z.string().email().min(1, {message: 'Email is required'}),
@@ -53,8 +59,20 @@ const ProfileDialogContent = (props: Props) => {
     }
   })
 
-  const onSubmit = async ({email}: z.infer<typeof addFriendFormSchema>) => {
-    
+  const handleFriendRequest = async ({email}: z.infer<typeof addFriendFormSchema>) => {
+    try {
+      await sendFriendRequest({email})
+      toast.success('Friend request sent successfully',{
+        description: `Request sent to ${email}`
+      });
+      form.reset()
+      setOpenFriendRequest(false)
+    } catch (error) {
+      toast.error('An error occurred',{
+        description: error instanceof ConvexError && error.data
+      });
+      console.error('Error sending friend request', error)
+    }
   }
 
   const updateStatusHandler = async () => {
@@ -105,7 +123,7 @@ const ProfileDialogContent = (props: Props) => {
 
         <Separator/>
 
-        <Dialog>
+        <Dialog onOpenChange={setOpenFriendRequest} open={openFriendRequest}>
           <DialogTrigger>
             <div className="flex items-center space-x-2">
               <UserRoundSearch/>
@@ -115,13 +133,13 @@ const ProfileDialogContent = (props: Props) => {
 
           <DialogContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <form onSubmit={form.handleSubmit(handleFriendRequest)} className="space-y-8">
                 <FormField control={form.control} name="email" render={({field})=>
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
                       <Input 
-                        disabled={true} 
+                        disabled={updateRequestSendStatus === 'loading'}
                         {...field} 
                         placeholder="friend@email.com" 
                       />
@@ -136,7 +154,7 @@ const ProfileDialogContent = (props: Props) => {
                 }/>
 
                 <Button 
-                  disabled={true}  
+                  disabled={updateRequestSendStatus === 'loading'}
                   type="submit"
                 >
                   Send friend request
@@ -153,11 +171,28 @@ const ProfileDialogContent = (props: Props) => {
             <div className="flex items-center space-x-2">
               <Handshake/>
               <p>View friend request</p>
+              {friendRequests && (
+                <Badge variant="outline">{friendRequests.length}</Badge>
+              )}
             </div>
           </DialogTrigger>
 
           <DialogContent>
-            <p className="text-xl text-center font-bold">No friend requests.</p>
+            {friendRequests && friendRequests.length > 0 ? (
+              <ScrollArea className="max-h-[400px] rounded-md">
+                {friendRequests.map((request, index) => (
+                  <FriendRequestCard
+                    key={index} 
+                    id={request._id}
+                    imageUrl={request.sender.imageUrl}
+                    username={request.sender.username}
+                    email={request.sender.email}
+                  />
+                ))}
+              </ScrollArea>
+            ):(
+              <p className="text-xl text-center font-bold">No friend requests.</p>
+            )}
           </DialogContent>
         </Dialog>
 
