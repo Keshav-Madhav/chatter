@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/providers/theme-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -23,7 +25,8 @@ export default function RootLayout({
           defaultTheme="system"
           enableSystem
         >
-          {children}
+          <TooltipProvider>{children}</TooltipProvider>
+          <Toaster richColors closeButton/>
         </ThemeProvider>
       </body>
     </html>
