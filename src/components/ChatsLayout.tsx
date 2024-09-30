@@ -1,6 +1,7 @@
 "use client"
 
 import SharedLayout from "@/components/SharedLayout";
+import ChatsSidebar from "@/components/ChatsSidebar";
 
 type Props = {
   children: React.ReactNode;
@@ -9,8 +10,8 @@ type Props = {
 const ChatsLayout = ({ children }: Props) => {
   return (
     <SharedLayout
-      sideBarComponnent={()=> <></>}
-      
+      sideBarComponnent={()=> <ChatsSidebar/>}
+
     >
       {children}
     </SharedLayout>
