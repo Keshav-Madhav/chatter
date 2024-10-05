@@ -13,6 +13,7 @@ import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet"
 import { Button } from "./ui/button"
 import { useIsDesktop } from "@/hooks/useIsDesktop"
 import Profilesheet from "./Profilesheet"
+import GroupSheet from "./GroupSheet"
 
 type Props = {
   chatAvatar: string;
@@ -56,7 +57,10 @@ const ChatHeader = ({ chatAvatar, username, isGroup, chat_id, status }: Props) =
 
           <SheetContent className="bg-white dark:bg-black dark:text-white w-80 md:w-96">
             {isGroup ? (
-              <div>group</div>
+              <GroupSheet
+                chat_id={chat_id}
+                groupname={username}
+              />
             ):( 
               <Profilesheet
                 chat_id={chat_id}

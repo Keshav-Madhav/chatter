@@ -69,7 +69,7 @@ export const deleteGroup = mutation({
     if(!conversation) throw new ConvexError("Conversation not found")
 
     const members = await ctx.db.query("conversation_members").withIndex("by_conversationId", q => q.eq("conversationId", args.id)).collect();
-    if(!members || members.length <=1) throw new ConvexError("Cannot delete conversation")
+    if(!members) throw new ConvexError("Cannot delete conversation")
 
     const messages = await ctx.db.query("messages").withIndex("by_conversationId", q => q.eq("conversationId", args.id)).collect();
 
