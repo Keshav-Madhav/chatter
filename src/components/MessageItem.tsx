@@ -19,22 +19,22 @@ type Props = {
 const MessageItem = ({fromCurrentUser, senderImage, senderName, lastByUser, content, createdAt, type, seen}: Props) => {
   const formatTime = (timeStamp: number)=> format(timeStamp, 'HH:mm')
   return (
-    <div className={cn('flex flex-col w-full mx-2', {
+    <div className={cn('flex w-full px-2', {
       'justify-end': fromCurrentUser,
     })}>
-      <div className={cn('flex flex-col w-full mx-2', {
+      <div className={cn('flex flex-col w-full px-2', {
         'order-1 items-end': fromCurrentUser,
         'order-2 items-start': !fromCurrentUser,
       })}>
-        <div className={cn('px-3 py-1 flex flex-col space-x-2 items-center justify-between rounded-lg max-w-[80%]', {
-          'bg-blue-700 text-primary-foreground' : fromCurrentUser && type === 'text',
-          'bg-secondary text-secondary': !fromCurrentUser && type === 'text',
+        <div className={cn('px-3 pt-1 flex flex-col space-x-2 justify-between rounded-lg max-w-[80%] min-w-[20%]', {
+          'bg-blue-700 text-primary-foreground dark:text-white' : fromCurrentUser && type === 'text',
+          'bg-secondary ': !fromCurrentUser && type === 'text',
           'rounded-br-none': fromCurrentUser && !lastByUser,
           'rounded-bl-none': !fromCurrentUser && !lastByUser,
         })}>
 
           {type === 'text' && (
-            <p className='text-wrap break-words whitespace-pre-wrap break-all'>{content}</p>
+            <p className='text-wrap break-words whitespace-pre-wrap break-all leading-5'>{content}</p>
           )}
           {type === 'audio' && (
             <audio controls className="max-w-44 md:max-w-full">
@@ -53,9 +53,7 @@ const MessageItem = ({fromCurrentUser, senderImage, senderName, lastByUser, cont
             </Link>
           )}
 
-          <p className={cn('text-xs flex w-full my-1', {
-            'text-primary-foreground justify-end': fromCurrentUser,
-            'text-secondary-foreground justify-start': !fromCurrentUser,
+          <p className={cn('text-xs flex w-full my-1 justify-end', {
             'dark:text-white text-black': type === 'audio' || type === 'pdf' || type === 'image',
           })}>
             {formatTime(createdAt)}

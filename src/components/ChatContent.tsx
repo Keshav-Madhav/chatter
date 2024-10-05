@@ -15,17 +15,27 @@ type Props = {
 }
 
 const ChatContent = ({ chat_id }: Props) => {
-  const conversation = useQuery(api.conversation.get, { id: chat_id })
-  const messages = useQuery(api.messages.get, { Id: chat_id })
-  const {mutate: markAsRead} = useMutationHandler(api.conversation.markAsRead)
-  const {user} = useUser();
+  const conversation = useQuery(api.conversation.get, { id: chat_id });
 
-  if(!conversation || !messages) return null;
+  const messages = useQuery(api.messages.get, {
+    Id: chat_id as Id<'conversations'>,
+  });
 
-  const members =  conversation.isGroup ? conversation.otherMembers ?? [] : conversation.otherMember ? [conversation.otherMember] : []
-  const chatAvatar = conversation.otherMember?.imageUrl || '';
-  const name = conversation.isGroup ? conversation.name || '' : conversation.otherMember?.username || '';
-  const status = conversation.otherMember?.status || '';
+  const members = conversation?.isGroup
+    ? conversation?.otherMembers ?? []
+    : conversation?.otherMember
+      ? [conversation.otherMember]
+      : [];
+
+  const { mutate: markAsRead, state: _ } = useMutationHandler(
+    api.conversation.markAsRead
+  );
+
+  useEffect(() => {
+    if (messages && messages.length > 0) {
+      markAsRead({ conversationId: chat_id, messageId: messages[0]._id });
+    }
+  }, [chat_id, markAsRead, messages]);
 
   const getSeenMessage = (messageId: Id<"messages">) => {
     const seenUsers = members.filter(member => member.lastSeenMessageId === messageId).map(member => member.username?.split(' ')[0])
@@ -46,20 +56,24 @@ const ChatContent = ({ chat_id }: Props) => {
       default:
         return `${seenUsers[0]}, ${seenUsers[1]} and ${seenUsers.length - 2} others seen`
     }
-  }
+  };
 
-  useEffect(() => {
-    if(messages.length > 0){
-      markAsRead({conversationId: chat_id, messageId: messages[0]._id})
-    }
-  }, [chat_id, markAsRead, messages])
+  const { user } = useUser();
+
+  if (!conversation) return null;
+
+  const chatAvatar = conversation?.otherMember?.imageUrl || '';
+  const name = conversation?.isGroup
+    ? conversation?.name
+    : conversation?.otherMember?.username || '';
+  const status = conversation?.otherMember?.status || '';
 
   return (
     <div className="h-full flex">
-      <ChatHeader chatAvatar={chatAvatar} username={name} isGroup={conversation.isGroup} chat_id={chat_id} status={status} />
+      <ChatHeader chatAvatar={chatAvatar} username={name!} isGroup={conversation.isGroup} chat_id={chat_id} status={status} />
 
       <div className="p-3 flex flex-1 flex-col-reverse gap-2">
-        {messages.map((message, index) => (
+        {messages?.map((message, index) => (
           <MessageItem
             key={index}
             fromCurrentUser={message.isCurrentUser}
