@@ -12,6 +12,7 @@ import { Id } from "../../convex/_generated/dataModel"
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet"
 import { Button } from "./ui/button"
 import { useIsDesktop } from "@/hooks/useIsDesktop"
+import Profilesheet from "./Profilesheet"
 
 type Props = {
   chatAvatar: string;
@@ -57,9 +58,13 @@ const ChatHeader = ({ chatAvatar, username, isGroup, chat_id, status }: Props) =
             {isGroup ? (
               <div>group</div>
             ):( 
-              <div>
-                Profile
-              </div>
+              <Profilesheet
+                chat_id={chat_id}
+                username={username}
+                status={status}
+                groupsInCommon={groupsInCommon}
+                chatAvatar={chatAvatar}
+              /> 
             )}
           </SheetContent>
         </Sheet>
