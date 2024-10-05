@@ -121,12 +121,12 @@ export const markAsRead = mutation({
     const conversation = await ctx.db.get(args.conversationId)
     if(!conversation) throw new ConvexError("Conversation not found")
 
-    const members = await ctx.db.query("conversation_members").withIndex("by_conversationId", q => q.eq("conversationId", args.conversationId)).collect();
-    if(!members || members.length <=1) throw new ConvexError("Cannot delete conversation")
+    const members = await ctx.db.query("conversation_members").withIndex("by_conversationId", q => q.eq("conversationId", args.conversationId)).unique();
+    if(!members) throw new ConvexError("Not a member of the conversation")
 
     const lastMessage = await ctx.db.get(args.messageId)
 
-    await ctx.db.patch(members[0]._id, {
+    await ctx.db.patch(members._id, {
       lastSeenMessage: lastMessage? lastMessage._id : undefined,
     })
   }
