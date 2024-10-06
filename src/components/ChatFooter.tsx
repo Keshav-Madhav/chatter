@@ -16,7 +16,7 @@ import Picker from "@emoji-mart/react";
 import { useTheme } from "next-themes";
 import data from "@emoji-mart/data"
 import TextareaAutoSize from "react-textarea-autosize";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { FilePond, registerPlugin} from "react-filepond";
 import 'filepond/dist/filepond.min.css'
@@ -26,6 +26,8 @@ import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css'
 import {v4 as uuid} from 'uuid'
 import { supabaseBrowserClient as supabase } from "@/supabase/supabaseClient";
 import { AudioRecorder } from 'react-audio-voice-recorder';
+import Pusher from 'pusher-js'
+import axios from 'axios'
 
 type Props = {
   chat_id: Id<"conversations">
@@ -42,7 +44,7 @@ const ChatFooter = ({ chat_id, currUserId }: Props) => {
   const { width } = useSidebarWidth();
   const { resolvedTheme } = useTheme();
   const [isTyping, setIsTyping] = useState(false)
-  const [typeing, setTypeing] = useState(false)
+  const [typing, setTyping] = useState(false)
   const [imageOrPdf, setImageOrPdf] = useState<Blob | null>(null)
   const [imageOrPdfModal, setImageOrPdfModal] = useState(false)
   const [isSendingFile, setIsSendingFile] = useState(false)
@@ -75,6 +77,24 @@ const ChatFooter = ({ chat_id, currUserId }: Props) => {
     
     if(selectionStart !== null) {
       form.setValue('message', value)
+    }
+
+    if (!typing){
+      setTyping(true)
+      await axios.post('/api/type-indicator', {
+        channel: chat_id,
+        event: 'typing',
+        data: { isTyping: true, userId: currUserId }
+      })
+
+      setTimeout(async () => {
+        setTyping(false)
+        await axios.post('/api/type-indicator', {
+          channel: chat_id,
+          event: 'typing',
+          data: { isTyping: false, userId: currUserId }
+        })
+      }, 2000)
     }
   }
 
@@ -152,10 +172,25 @@ const ChatFooter = ({ chat_id, currUserId }: Props) => {
     } catch (error) {
       console.error(error)
       toast.error("Failed to send audio")
-    } finally {
-
     }
   }
+
+  useEffect(() => {
+    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
+      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+    })
+
+    const channel = pusher.subscribe(chat_id)
+    channel.bind('typing', (data: {isTyping: boolean, userId: string}) => {
+      if(data.userId !== currUserId){
+        setIsTyping(data.isTyping)
+      }
+    })
+
+    return () => {
+      pusher.unsubscribe(chat_id)
+    }
+  }, [])
 
   return (
     <Form {...form}>
@@ -182,7 +217,7 @@ const ChatFooter = ({ chat_id, currUserId }: Props) => {
           control={form.control}
           name="message"
           render={({field})=>(
-            <FormControl>
+            <FormControl className="relative">
               <>
                 <TextareaAutoSize 
                   onKeyDown={async e =>{
@@ -199,6 +234,10 @@ const ChatFooter = ({ chat_id, currUserId }: Props) => {
                   onChange={handleInputChange}
                   className="flex-grow bg-gray-200 dark:bg-gray-600 rounded-2xl resize-none px-4 py-2 ring-0 focus:ring-0 focus:outline-none outline-none"
                 />
+
+                {isTyping && (
+                  <p className="absolute -top-6 text-xs ml-1 text-gray-500 dark:text-gray-400">Typing...</p>
+                )}
               </>
             </FormControl>
           )}
@@ -206,7 +245,7 @@ const ChatFooter = ({ chat_id, currUserId }: Props) => {
 
         <Dialog open={imageOrPdfModal} onOpenChange={setImageOrPdfModal}>
           <DialogTrigger>
-            <Paperclip className="cursor-pointer" size={20} />
+            <Paperclip className="cursor-pointer" size={30} />
           </DialogTrigger>
 
           <DialogContent className="min-w-80">
