@@ -14,6 +14,7 @@ import { Button } from "./ui/button"
 import { useIsDesktop } from "@/hooks/useIsDesktop"
 import Profilesheet from "./Profilesheet"
 import GroupSheet from "./GroupSheet"
+import { useRouter } from "next/navigation"
 
 type Props = {
   chatAvatar: string;
@@ -28,6 +29,11 @@ const ChatHeader = ({ chatAvatar, username, isGroup, chat_id, status }: Props) =
   const isDesktop = useIsDesktop()
   const conversations = useQuery(api.conversations.get)
   const groupsInCommon = conversations?.filter(({conversation}) => conversation.isGroup)
+  const router = useRouter()
+
+  const videoCall = () => {
+    router.push(`/calls/${chat_id}`)
+  }
 
   return (
     <div
@@ -75,8 +81,8 @@ const ChatHeader = ({ chatAvatar, username, isGroup, chat_id, status }: Props) =
       </div>
 
       <div className="flex items-center space-x-4">
-        <Video />
-        <Phone />
+        <Video className="cursor-pointer" onClick={videoCall}/>
+        <Phone className="cursor-pointer" onClick={videoCall}/>
       </div>
     </div>
   )
