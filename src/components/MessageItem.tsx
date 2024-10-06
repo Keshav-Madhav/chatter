@@ -19,7 +19,7 @@ type Props = {
 const MessageItem = ({fromCurrentUser, senderImage, senderName, lastByUser, content, createdAt, type, seen}: Props) => {
   const formatTime = (timeStamp: number)=> format(timeStamp, 'HH:mm')
   return (
-    <div className={cn('flex w-full px-2', {
+    <div className={cn('flex items-end', {
       'justify-end': fromCurrentUser,
     })}>
       <div className={cn('flex flex-col w-full px-2', {
@@ -49,7 +49,7 @@ const MessageItem = ({fromCurrentUser, senderImage, senderName, lastByUser, cont
           )}
           {type === 'pdf' && (
             <Link href={content[0]} target='_blank' rel='noopener noreferrer'>
-              <iframe src={content[0] + '#toolbar=0'} width="100%" height="100%"/>
+              <iframe src={content[0] + '#toolbar=0'} width="100%" height="100%" className='pointer-events-none overflow-hidden' title='sent file'/>
             </Link>
           )}
 
