@@ -3,6 +3,8 @@
 import { ClerkProvider, SignInButton, useAuth } from "@clerk/clerk-react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { Authenticated, ConvexReactClient, Unauthenticated } from "convex/react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FaSignalMessenger } from "react-icons/fa6";
 
 type Props = {
   children: React.ReactNode;
@@ -31,7 +33,21 @@ const ConvexClerkProvider = ({ children }: Props) => {
         </Authenticated>
 
         <Unauthenticated>
-          <SignInButton />
+          <div className="bg-slate-900 w-svw h-dvh grid place-content-center">
+            <div className="grid place-content-center mb-5 ">
+              <FaSignalMessenger className="text-primary-main" size={100} />
+            </div>
+
+            <Card className="bg-slate-800 w-[350px] border-none shadow-xl">
+              <CardHeader>
+                <CardTitle className="text-white">Authenticate</CardTitle>
+              </CardHeader>
+
+              <CardContent className="text-white">
+                <SignInButton/>
+              </CardContent>
+            </Card>
+          </div>
         </Unauthenticated>
       </ConvexProviderWithClerk>
     </ClerkProvider>
